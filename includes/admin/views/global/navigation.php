@@ -232,12 +232,6 @@ function acf_print_menu_section( $menu_items, $section = '' ) {
 						$unlock_url    = admin_url( 'edit.php?post_type=acf-field-group&page=acf-settings-updates#acf_pro_license' );
 						$unlock_target = '';
 					}
-
-					if ( acf_pro_is_license_expired() ) {
-						$unlock_url    = acf_add_url_utm_tags( acf_pro_get_manage_license_url(), 'ACF renewal', 'header' );
-						$unlock_target = '_blank';
-						$unlock_text   = __( 'Renew ACF PRO License', 'acf' );
-					}
 				}
 				?>
 				<a target="<?php echo esc_attr( $unlock_target ); ?>" href="<?php echo esc_url( $unlock_url ); ?>" class="btn-upgrade acf-admin-toolbar-upgrade-btn">
