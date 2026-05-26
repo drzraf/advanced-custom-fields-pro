@@ -879,7 +879,7 @@ if ( ! class_exists( 'ACF' ) ) {
 			add_filter( 'wpml_get_home_url', 'acf_pro_license_ml_intercept', 99, 2 );
 			add_filter( 'trp_home_url', 'acf_pro_license_ml_intercept', 99, 2 );
 
-			if ( acf_pro_is_legacy_multisite() && acf_is_multisite_sub_site() ) {
+			if ( acf_is_multisite_sub_site() ) {
 				$home_url = get_home_url( get_main_site_id() );
 			} else {
 				$home_url = home_url();

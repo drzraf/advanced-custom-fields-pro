@@ -12,125 +12,7 @@
 $nonce                   = $active ? 'deactivate_pro_license' : 'activate_pro_license';
 $activate_deactivate_btn = $active ? __( 'Deactivate License', 'acf' ) : __( 'Activate License', 'acf' );
 
-/**
- * Renders the license status table.
- *
- * @since 6.2.3
- *
- * @param array $status The current license status array.
- * @return void
- */
-function acf_pro_render_license_status_table( $status ) {
-	// Bail early if we don't have a status from the server.
-	if ( acf_pro_get_license_key() && empty( $status['status'] ) ) {
-		return;
-	}
 
-	$status['status'] = ! empty( $status['status'] ) ? $status['status'] : 'inactive';
-	$status_text      = _x( 'Inactive', 'license status', 'acf' );
-	$is_lifetime      = ! empty( $status['lifetime'] );
-	$is_wpe           = ! empty( $status['wpe'] );
-
-	if ( 'active' === $status['status'] ) {
-		$status_text = _x( 'Active', 'license status', 'acf' );
-	} elseif ( 'expired' === $status['status'] ) {
-		$status_text = _x( 'Expired', 'license status', 'acf' );
-	} elseif ( 'cancelled' === $status['status'] ) {
-		$status_text = _x( 'Cancelled', 'license status', 'acf' );
-	}
-
-	$indicator = '<span class="acf-license-status ' . esc_attr( $status['status'] ) . '">' . esc_html( $status_text ) . '</span>';
-	?>
-
-	<table class="acf-license-status-table">
-		<tr>
-			<th>
-				<?php
-				if ( $is_lifetime || 'inactive' === $status['status'] ) {
-					esc_html_e( 'License Status', 'acf' );
-				} else {
-					esc_html_e( 'Subscription Status', 'acf' );
-				}
-				?>
-			</th>
-			<td><?php echo acf_esc_html( $indicator ); ?></td>
-		</tr>
-		<?php if ( ! empty( $status['name'] ) ) : ?>
-		<tr>
-			<th>
-				<?php
-				if ( $is_lifetime ) {
-					esc_html_e( 'License Type', 'acf' );
-				} else {
-					esc_html_e( 'Subscription Type', 'acf' );
-				}
-				?>
-			</th>
-			<td>
-				<?php
-				if ( $is_lifetime && ! $is_wpe ) {
-					esc_html_e( 'Lifetime - ', 'acf' );
-				}
-				echo esc_html( $status['name'] );
-				?>
-			</td>
-		</tr>
-		<?php endif; ?>
-		<?php if ( ! $is_lifetime && ! empty( $status['expiry'] ) && is_numeric( $status['expiry'] ) ) : ?>
-		<tr>
-			<th>
-				<?php
-				if ( acf_pro_is_license_expired( $status ) ) {
-					esc_html_e( 'Subscription Expired', 'acf' );
-				} else {
-					esc_html_e( 'Subscription Expires', 'acf' );
-				}
-				?>
-			</th>
-			<td>
-				<?php
-				$date_format = get_option( 'date_format', 'F j, Y' );
-				$expiry_date = date_i18n( $date_format, $status['expiry'] );
-				echo esc_html( $expiry_date );
-				?>
-			</td>
-		</tr>
-		<?php endif; ?>
-	</table>
-	<?php
-}
-
-/**
- * Renders the "Manage License"/"Renew Subscription" button.
- *
- * @since 6.2.3
- *
- * @param array $status The current license status.
- * @return void
- */
-function acf_pro_render_manage_license_button( $status ) {
-	// Lifetime licenses don't have anything to manage.
-	if ( ! empty( $status['lifetime'] ) ) {
-		return;
-	}
-
-	$url   = acf_pro_get_manage_license_url( $status );
-	$url   = acf_add_url_utm_tags( $url, 'updates page', 'manage license button' );
-	$text  = __( 'Manage License', 'acf' );
-	$class = '';
-
-	if ( acf_pro_is_license_expired( $status ) || acf_pro_was_license_refunded( $status ) ) {
-		$text  = __( 'Renew Subscription', 'acf' );
-		$class = ' acf-btn acf-renew-subscription';
-	}
-
-	printf(
-		'<a href="%1$s" target="_blank" class="acf-manage-license-btn%2$s">%3$s<i class="acf-icon acf-icon-arrow-up-right"></i></a>',
-		esc_url( $url ),
-		esc_attr( $class ),
-		esc_html( $text )
-	);
-}
 ?>
 <div class="wrap acf-settings-wrap acf-updates">
 
@@ -152,10 +34,6 @@ function acf_pro_render_manage_license_button( $status ) {
 						<?php
 						$acf_recheck_class = ' acf-btn acf-btn-secondary';
 
-						if ( acf_pro_is_license_expired( $license_status ) || acf_pro_was_license_refunded( $license_status ) ) {
-							acf_pro_render_manage_license_button( $license_status );
-							$acf_recheck_class = '';
-						}
 
 						$acf_recheck_nonce = wp_create_nonce( 'acf_retry_activation' );
 						$acf_recheck_url   = admin_url( 'edit.php?post_type=acf-field-group&page=acf-settings-updates&acf_retry_nonce=' . $acf_recheck_nonce );
@@ -190,7 +68,6 @@ function acf_pro_render_manage_license_button( $status ) {
 						<input <?php echo $activate_deactivate_btn_id; //phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- manually defined safe HTML. ?>type="submit" value="<?php echo esc_attr( $activate_deactivate_btn ); ?>" class="acf-btn<?php echo esc_attr( $activate_deactivate_btn_class ); ?>">
 
 						<?php
-						acf_pro_render_manage_license_button( $license_status );
 
 						if ( acf_pro_is_license_expired( $license_status ) || acf_pro_was_license_refunded( $license_status ) ) {
 							$acf_recheck_nonce = wp_create_nonce( 'acf_recheck_status' );
@@ -209,7 +86,6 @@ function acf_pro_render_manage_license_button( $status ) {
 			<?php endif; // End of license_defined check. ?>
 			<div class="acf-license-status-wrap">
 				<?php
-				acf_pro_render_license_status_table( $license_status );
 
 				if ( ! $active && ! defined( 'ACF_PRO_LICENSE' ) ) :
 					?>
